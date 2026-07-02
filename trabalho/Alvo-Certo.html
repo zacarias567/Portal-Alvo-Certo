@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alvo Certo - Clube de Tiro e Loja de Armas</title>
+<style>
+  :root{
+    --bg-principal:#0b0f17;
+    --bg-cards:#111622;
+    --vermelho-alvo:#dc2626;
+    --vermelho-hover:#b91c1c;
+    --texto-claro:#ffffff;
+    --texto-mutado:#94a3b8;
+    --borda-input:#1f293d;
+    --verde-ok:#16a34a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg-principal);
+    color:var(--texto-claro);
+    font-family:'Segoe UI', Arial, sans-serif;
+    line-height:1.5;
+  }
+  a{color:inherit; text-decoration:none;}
+  img,svg{display:block;}
+  .container{max-width:1100px; margin:0 auto; padding:0 24px;}
+
+  /* HEADER */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(11,15,23,0.95);
+    border-bottom:1px solid var(--borda-input);
+    backdrop-filter:blur(6px);
+  }
+  .nav{display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:1100px; margin:0 auto;}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:800; font-size:1.15rem; letter-spacing:.5px;}
+  .brand .logo-circle{
+    width:34px; height:34px; border-radius:50%;
+    border:2px solid var(--vermelho-alvo);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  .brand .logo-circle::after{content:""; width:10px; height:10px; border-radius:50%; background:var(--vermelho-alvo);}
+  .nav-links{display:flex; gap:28px; font-size:.95rem; color:var(--texto-mutado);}
+  .nav-links a:hover{color:var(--texto-claro);}
+  .btn{
+    display:inline-block; padding:11px 22px; border-radius:6px;
+    font-weight:700; font-size:.9rem; cursor:pointer; border:none;
+    transition:background .2s, transform .15s;
+  }
+  .btn-primary{background:var(--vermelho-alvo); color:#fff;}
+  .btn-primary:hover{background:var(--vermelho-hover);}
+  .btn-outline{background:transparent; color:#fff; border:1px solid var(--borda-input);}
+  .btn-outline:hover{border-color:var(--vermelho-alvo);}
+  .btn:disabled{opacity:.6; cursor:not-allowed;}
+  .menu-toggle{display:none; background:none; border:none; color:#fff; font-size:1.6rem; cursor:pointer;}
+
+  /* HERO */
+  .hero{padding:80px 24px 60px; text-align:center;}
+  .hero h1{font-size:2.6rem; font-weight:800; max-width:760px; margin:0 auto 16px; line-height:1.2;}
+  .hero p{color:var(--texto-mutado); font-size:1.1rem; max-width:600px; margin:0 auto 32px;}
+  .hero-ctas{display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-bottom:56px;}
+  .stat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; max-width:900px; margin:0 auto;}
+  .stat-card{
+    background:var(--bg-cards); border:1px solid var(--borda-input); border-radius:10px;
+    padding:28px 16px; text-align:center;
+  }
+  .stat-icon{font-size:1.6rem; margin-bottom:10px;}
+  .stat-card h3{font-size:1.1rem; margin-bottom:4px;}
+  .stat-card p{color:var(--texto-mutado); font-size:.9rem;}
+
+  /* SECTIONS */
+  section{padding:70px 24px;}
+  .section-head{margin-bottom:36px;}
+  .section-head h2{font-size:2rem; font-weight:800; margin-bottom:8px;}
+  .section-head p{color:var(--texto-mutado);}
+  .eyebrow{color:var(--vermelho-alvo); font-weight:700; font-size:.85rem; text-transform:uppercase; letter-spacing:1px;}
+
+  .grid-2{display:grid; grid-template-columns:repeat(2,1fr); gap:20px;}
+  .card{
+    background:var(--bg-cards); border:1px solid var(--borda-input); border-radius:10px;
+    padding:28px; display:flex; flex-direction:column; gap:6px;
+  }
+  .card .icon{font-size:1.8rem; margin-bottom:8px;}
+  .card h3{font-size:1.15rem;}
+  .tag{color:var(--vermelho-alvo); font-size:.75rem; font-weight:700; letter-spacing:.5px; text-transform:uppercase;}
+  .card p.desc{color:var(--texto-mutado); font-size:.92rem; margin:6px 0 14px;}
+  .card .btn{align-self:flex-start;}
+
+  .meta-row{display:flex; gap:16px; color:var(--texto-mutado); font-size:.85rem; margin-bottom:10px;}
+
+  .legal-notice{
+    background:rgba(220,38,38,0.08); border:1px solid rgba(220,38,38,0.35);
+    border-radius:8px; padding:16px 20px; margin-top:28px; font-size:.88rem; color:#fca5a5;
+  }
+  .legal-notice b{color:#fecaca;}
+
+  /* FORM */
+  .form-wrap{max-width:640px;}
+  .field{margin-bottom:20px;}
+  .field label{display:block; font-size:.9rem; margin-bottom:6px; font-weight:600;}
+  .field label .req{color:var(--vermelho-alvo);}
+  .field input, .field select, .field textarea{
+    width:100%; background:var(--bg-cards); border:1px solid var(--borda-input);
+    border-radius:6px; padding:12px 14px; color:#fff; font-size:.95rem; font-family:inherit;
+  }
+  .field input::placeholder, .field textarea::placeholder{color:#5b6577;}
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none; border-color:var(--vermelho-alvo);
+  }
+  .field.error input{border-color:var(--vermelho-alvo);}
+  .field .error-msg{display:none; color:var(--vermelho-alvo); font-size:.8rem; margin-top:6px;}
+  .field.error .error-msg{display:block;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .hint{color:var(--texto-mutado); font-size:.78rem; margin-top:5px;}
+  .lgpd-box{
+    background:var(--bg-cards); border-left:3px solid var(--vermelho-alvo); border-radius:6px;
+    padding:14px 16px; font-size:.82rem; color:var(--texto-mutado); margin-top:18px;
+  }
+  .lgpd-box b{color:var(--texto-claro);}
+  #agendar-form .btn-primary{width:100%; padding:14px; font-size:.95rem; margin-top:6px;}
+
+  /* SOBRE */
+  .sobre-grid{display:grid; grid-template-columns:1.3fr 1fr; gap:48px;}
+  .sobre-grid h4{color:var(--vermelho-alvo); font-weight:700; margin-bottom:14px;}
+  .sobre-grid p{color:var(--texto-mutado); font-size:.92rem; margin-bottom:14px;}
+  .cert-list{list-style:none; display:flex; flex-direction:column; gap:12px;}
+  .cert-list li{display:flex; gap:10px; align-items:flex-start; font-size:.9rem; color:var(--texto-mutado);}
+  .cert-list li .check{color:var(--verde-ok); flex-shrink:0;}
+
+  /* CONTATO */
+  .contact-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:32px;}
+  .contact-card{background:var(--bg-cards); border:1px solid var(--borda-input); border-radius:10px; padding:24px; text-align:center;}
+  .contact-card .icon{font-size:1.5rem; margin-bottom:10px; color:var(--vermelho-alvo);}
+  .contact-card h4{margin-bottom:6px;}
+  .contact-card p{color:var(--texto-mutado); font-size:.88rem;}
+  .contact-card a{color:var(--vermelho-alvo);}
+  .map-box{
+    background:var(--bg-cards); border:1px solid var(--borda-input); border-radius:10px;
+    height:280px; display:flex; align-items:center; justify-content:center; color:var(--texto-mutado);
+    font-size:.9rem;
+  }
+
+  /* PAINEL DE ACOMPANHAMENTO */
+  .table-wrap{overflow-x:auto; border:1px solid var(--borda-input); border-radius:10px;}
+  table{width:100%; border-collapse:collapse; font-size:.88rem;}
+  thead th{text-align:left; padding:14px 16px; background:var(--bg-cards); color:var(--texto-mutado); font-weight:600; border-bottom:1px solid var(--borda-input);}
+  tbody td{padding:14px 16px; border-bottom:1px solid var(--borda-input);}
+  tbody tr:nth-child(even){background:var(--bg-cards);}
+  tbody tr:nth-child(odd){background:var(--bg-principal);}
+  .status-pill{padding:4px 10px; border-radius:20px; font-size:.75rem; font-weight:700;}
+  .status-pendente{background:rgba(220,38,38,0.15); color:#f87171;}
+  .status-confirmado{background:rgba(22,163,74,0.15); color:#4ade80;}
+  .empty-state{padding:40px; text-align:center; color:var(--texto-mutado); font-size:.9rem;}
+
+  /* FOOTER */
+  footer{border-top:1px solid var(--borda-input); padding:50px 24px 24px;}
+  .footer-grid{display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:32px; margin-bottom:32px;}
+  .footer-grid h4{margin-bottom:14px;}
+  .footer-grid p{color:var(--texto-mutado); font-size:.88rem;}
+  .footer-grid ul{list-style:none; display:flex; flex-direction:column; gap:8px;}
+  .footer-grid ul a{color:var(--texto-mutado); font-size:.88rem;}
+  .footer-grid ul a:hover{color:#fff;}
+  .footer-bottom{border-top:1px solid var(--borda-input); padding-top:20px; text-align:center; font-size:.78rem; color:var(--texto-mutado);}
+  .footer-bottom .legal{max-width:700px; margin:0 auto 10px;}
+
+  /* TOAST */
+  #toast{
+    position:fixed; bottom:24px; right:24px; z-index:200;
+    background:var(--bg-cards); border:1px solid var(--verde-ok); border-left:4px solid var(--verde-ok);
+    border-radius:8px; padding:16px 20px; max-width:340px;
+    display:flex; gap:12px; align-items:flex-start;
+    transform:translateY(140%); opacity:0; transition:transform .3s ease, opacity .3s ease;
+  }
+  #toast.show{transform:translateY(0); opacity:1;}
+  #toast .t-icon{color:var(--verde-ok); font-size:1.2rem;}
+  #toast p{font-size:.88rem; color:#e2e8f0;}
+
+  @media(max-width:860px){
+    .nav-links{display:none;}
+    .grid-2, .stat-grid, .field-row, .sobre-grid, .contact-grid, .footer-grid{grid-template-columns:1fr;}
+    .hero h1{font-size:2rem;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="brand"><span class="logo-circle"></span> ALVO CERTO</div>
+    <nav class="nav-links">
+      <a href="#inicio">Início</a>
+      <a href="#catalogo">Catálogo</a>
+      <a href="#cursos">Cursos</a>
+      <a href="#agendamento">Agendamento</a>
+      <a href="#contato">Contato</a>
+    </nav>
+    <a href="#agendamento" class="btn btn-primary">Agendar Horário</a>
+  </div>
+</header>
+
+<section class="hero" id="inicio">
+  <h1>Tradição, Precisão e Segurança</h1>
+  <p>O maior clube de tiro e loja especializada da região</p>
+  <div class="hero-ctas">
+    <a href="#catalogo" class="btn btn-primary">Ver Catálogo</a>
+    <a href="#agendamento" class="btn btn-outline">Agendar no Estande</a>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-icon">🏆</div><h3>+15 anos</h3><p>De experiência no segmento</p></div>
+    <div class="stat-card"><div class="stat-icon">🎯</div><h3>Estande Profissional</h3><p>Alcances de 25m e 50m</p></div>
+    <div class="stat-card"><div class="stat-icon">🔒</div><h3>100% Seguro</h3><p>Ambiente regulamentado</p></div>
+  </div>
+</section>
+
+<section id="catalogo">
+  <div class="container">
+    <div class="section-head">
+      <h2>Catálogo de Armamentos e Acessórios</h2>
+      <p>Consulte nosso portfólio. Para informações de preço e disponibilidade, agende uma visita.</p>
+    </div>
+    <div class="grid-2" id="catalogo-grid">
+      <div class="card">
+        <div class="icon">🔫</div>
+        <span class="tag">Pistolas</span>
+        <h3>Pistola Taurus G3 9mm</h3>
+        <p class="desc">Pistola semiautomática de alta confiabilidade, ideal para tiro esportivo e defesa pessoal.</p>
+        <a class="btn btn-primary">Consulte-nos</a>
+      </div>
+      <div class="card">
+        <div class="icon">🔫</div>
+        <span class="tag">Revólveres</span>
+        <h3>Revólver Taurus 856 .38</h3>
+        <p class="desc">Revólver de cilindro com 6 tiros, robusto e confiável para diversos fins.</p>
+        <a class="btn btn-primary">Consulte-nos</a>
+      </div>
+      <div class="card">
+        <div class="icon">🎯</div>
+        <span class="tag">Rifles</span>
+        <h3>Rifle CBC 7.62</h3>
+        <p class="desc">Rifle de precisão para tiro esportivo de longa distância e caça.</p>
+        <a class="btn btn-primary">Consulte-nos</a>
+      </div>
+      <div class="card">
+        <div class="icon">🔍</div>
+        <span class="tag">Acessórios</span>
+        <h3>Mira Holográfica Vortex</h3>
+        <p class="desc">Mira holográfica de última geração para precisão aprimorada em tiro.</p>
+        <a class="btn btn-primary">Consulte-nos</a>
+      </div>
+      <div class="card">
+        <div class="icon">🛡️</div>
+        <span class="tag">Proteção</span>
+        <h3>Colete Balístico Nível IIIA</h3>
+        <p class="desc">Proteção balística certificada para uso profissional e tático.</p>
+        <a class="btn btn-primary">Consulte-nos</a>
+      </div>
+      <div class="card">
+        <div class="icon">🔧</div>
+        <span class="tag">Manutenção</span>
+        <h3>Kit de Limpeza Universal</h3>
+        <p class="desc">Kit completo para limpeza e manutenção de todas as armas de fogo.</p>
+        <a class="btn btn-primary">Consulte-nos</a>
+      </div>
+    </div>
+    <div class="legal-notice">
+      <b>⚠ Aviso Legal:</b> A comercialização de armamentos é regulamentada pelo Exército Brasileiro. A venda é realizada exclusivamente mediante apresentação de documentação CAC e análise do cadastro.
+    </div>
+  </div>
+</section>
+
+<section id="cursos">
+  <div class="container">
+    <div class="section-head">
+      <h2>Cursos e Treinamentos</h2>
+      <p>Desenvolva suas habilidades com instrutores certificados pelo Exército Brasileiro.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="icon">🎓</div>
+        <h3>Curso NR-23</h3>
+        <div class="meta-row"><span>🕐 16 horas</span><span>⭐ Básico</span></div>
+        <p class="desc">Treinamento básico de tiro esportivo para iniciantes. Aprenda técnicas fundamentais de segurança e precisão.</p>
+        <a class="btn btn-primary">Solicitar Vaga</a>
+      </div>
+      <div class="card">
+        <div class="icon">🎯</div>
+        <h3>Tiro Defensivo Avançado</h3>
+        <div class="meta-row"><span>🕐 32 horas</span><span>⭐ Avançado</span></div>
+        <p class="desc">Treinamento avançado para atiradores experientes com foco em defesa pessoal e táticas operacionais.</p>
+        <a class="btn btn-primary">Solicitar Vaga</a>
+      </div>
+      <div class="card">
+        <div class="icon">🔧</div>
+        <h3>Manuseio e Conservação</h3>
+        <div class="meta-row"><span>🕐 8 horas</span><span>⭐ Intermediário</span></div>
+        <p class="desc">Aprenda técnicas de limpeza, manutenção e armazenamento seguro de armas de fogo.</p>
+        <a class="btn btn-primary">Solicitar Vaga</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="agendamento">
+  <div class="container">
+    <div class="section-head">
+      <h2>Agendar Horário no Estande</h2>
+      <p>Preencha o formulário abaixo. Todos os dados são armazenados de forma segura e analisados pela nossa equipe.</p>
+    </div>
+
+    <div class="form-wrap">
+      <form id="agendar-form" novalidate>
+        <div class="field" id="field-nome">
+          <label>Nome Completo <span class="req">*</span></label>
+          <input type="text" id="nome_completo" placeholder="">
+          <p class="error-msg">Informe seu nome completo (mínimo 3 caracteres).</p>
+        </div>
+
+        <div class="field" id="field-email">
+          <label>E-mail <span class="req">*</span></label>
+          <input type="email" id="email" placeholder="">
+          <p class="error-msg">Informe um e-mail válido.</p>
+        </div>
+
+        <div class="field" id="field-telefone">
+          <label>Telefone/WhatsApp <span class="req">*</span></label>
+          <input type="text" id="telefone" placeholder="(99) 99999-9999">
+          <p class="error-msg">Informe um telefone válido.</p>
+        </div>
+
+        <div class="field" id="field-cac">
+          <label>🔒 Número CAC ou RG <span class="req">*</span></label>
+          <input type="text" id="numero_cac_rg" placeholder="Ex: 123456789 ou 12345678-9">
+          <p class="error-msg">Por favor, insira um número de CAC ou RG válido.</p>
+        </div>
+
+        <div class="field" id="field-tipo">
+          <label>Tipo de Agendamento <span class="req">*</span></label>
+          <select id="tipo_agendamento">
+            <option value="">Selecione uma opção</option>
+            <optgroup label="Cursos">
+              <option value="Curso NR-23">Curso NR-23</option>
+              <option value="Tiro Defensivo Avançado">Tiro Defensivo Avançado</option>
+              <option value="Manuseio e Conservação">Manuseio e Conservação</option>
+            </optgroup>
+            <optgroup label="Estande">
+              <option value="Estande 25m">Estande 25m</option>
+              <option value="Estande 50m">Estande 50m</option>
+            </optgroup>
+          </select>
+          <p class="error-msg">Selecione o tipo de agendamento.</p>
+        </div>
+
+        <div class="field-row">
+          <div class="field" id="field-data">
+            <label>Data Desejada <span class="req">*</span></label>
+            <input type="date" id="data_desejada">
+            <p class="error-msg">Selecione uma data futura.</p>
+          </div>
+          <div class="field" id="field-horario">
+            <label>Horário Preferencial <span class="req">*</span></label>
+            <select id="horario_preferencial">
+              <option value="">Selecione um horário</option>
+              <option value="09:00">09:00</option>
+              <option value="10:30">10:30</option>
+              <option value="13:00">13:00</option>
+              <option value="14:30">14:30</option>
+              <option value="16:00">16:00</option>
+              <option value="17:00">17:00</option>
+            </select>
+            <p class="error-msg">Selecione um horário.</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Observações (Opcional)</label>
+          <textarea id="observacoes" rows="4" placeholder="Deixe suas observações aqui..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submit-btn">Agendar Horário</button>
+
+        <div class="lgpd-box">
+          <b>Aviso LGPD:</b> Seus dados são armazenados com segurança conforme a LGPD (Lei 13.709/2018) e usados exclusivamente para análise comercial interna.
+        </div>
+      </form>
+    </div>
+
+    <div class="section-head" style="margin-top:64px;">
+      <h2>Painel de Acompanhamento</h2>
+      <p>Consulte em tempo real os agendamentos enviados neste dispositivo.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Protocolo</th><th>Data</th><th>Horário</th><th>Serviço</th><th>Status</th></tr>
+        </thead>
+        <tbody id="tabela-agendamentos"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state">Nenhum agendamento enviado ainda.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sobre">
+  <div class="container sobre-grid">
+    <div>
+      <span class="eyebrow">Nossa História</span>
+      <h2 style="margin:10px 0 20px;">Sobre o Alvo Certo</h2>
+      <p>Fundado em 2010, o Alvo Certo é o maior clube de tiro e loja especializada da região. Com mais de 15 anos de experiência, consolidamos nossa reputação através do profissionalismo, segurança e excelência no atendimento.</p>
+      <p>Somos credenciados pelo Exército Brasileiro e operamos em total conformidade com a legislação federal. Nossa missão é promover o tiro esportivo seguro, oferecer produtos de qualidade e contribuir para a formação de atiradores responsáveis.</p>
+      <p><b style="color:#fff;">Valores:</b> Segurança, Profissionalismo, Integridade, Excelência e Responsabilidade Social.</p>
+    </div>
+    <div>
+      <h4>Certificações e Credenciamentos</h4>
+      <ul class="cert-list">
+        <li><span class="check">✔</span> CR (Clube de Tiro) registrado no SINARM</li>
+        <li><span class="check">✔</span> Vendedor credenciado PFRJ</li>
+        <li><span class="check">✔</span> Instrutores certificados pelo Exército Brasileiro</li>
+        <li><span class="check">✔</span> Conformidade com Lei 10.826/2003 (Estatuto do Desarmamento)</li>
+        <li><span class="check">✔</span> Ambiente inspecionado e aprovado pela Polícia Federal</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="contato">
+  <div class="container">
+    <div class="section-head">
+      <h2>Entre em Contato</h2>
+      <p>Visite-nos, ligue ou envie um e-mail. Estamos prontos para atendê-lo.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-card">
+        <div class="icon">📍</div>
+        <h4>Endereço</h4>
+        <p>Rua das Caçadas, 1.250<br>Bairro Industrial<br>Blumenau/SC</p>
+      </div>
+      <div class="contact-card">
+        <div class="icon">📞</div>
+        <h4>Telefone</h4>
+        <p><a href="tel:+5548991644803">(48) 99164-4803</a><br>WhatsApp disponível</p>
+      </div>
+      <div class="contact-card">
+        <div class="icon">✉️</div>
+        <h4>E-mail</h4>
+        <p><a href="mailto:marcoslr733@gmail.com">marcoslr733@gmail.com</a></p>
+      </div>
+    </div>
+    <div class="contact-card" style="max-width:280px; margin-bottom:24px;">
+      <div class="icon">🕐</div>
+      <h4>Horário de Funcionamento</h4>
+      <p>Segunda a Sexta<br>9h às 18h</p>
+    </div>
+    <div class="map-box">Mapa: Rua das Caçadas, 1.250 — Bairro Industrial, Blumenau/SC</div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="brand" style="margin-bottom:12px;"><span class="logo-circle"></span> ALVO CERTO</div>
+        <p>O maior clube de tiro e loja especializada da região, com mais de 15 anos de experiência em excelência e segurança.</p>
+      </div>
+      <div>
+        <h4>Links Rápidos</h4>
+        <ul>
+          <li><a href="#inicio">Início</a></li>
+          <li><a href="#catalogo">Catálogo</a></li>
+          <li><a href="#cursos">Cursos</a></li>
+          <li><a href="#agendamento">Agendamento</a></li>
+          <li><a href="#contato">Contato</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contato</h4>
+        <p>(48) 99164-4803<br>marcoslr733@gmail.com<br><br>Rua das Caçadas, 1.250<br>Blumenau/SC</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="legal">Aviso Legal: O Clube de Tiro e Loja de Armas Alvo Certo opera em conformidade com o Estatuto do Desarmamento (Lei 10.826/2003) e legislações complementares. Todas as transações são sujeitas à verificação documental.</p>
+      <p>© 2026 Alvo Certo. Todos os direitos reservados.</p>
+    </div>
+  </div>
+</footer>
+
+<div id="toast">
+  <span class="t-icon">✔</span>
+  <p id="toast-msg">Agendamento enviado e salvo com sucesso no sistema!</p>
+</div>
+
+<script>
+/* =========================================================
+   PERSISTÊNCIA DE DADOS — Schema "agendamentos"
+   Fallback estável: LocalStorage (estrutura pronta para
+   substituição por chamadas Supabase/PostgreSQL futuramente).
+   ========================================================= */
+const STORAGE_KEY = 'alvo_certo_agendamentos';
+const DRAFT_KEY = 'alvo_certo_draft';
+
+function uuid(){
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c=>{
+    const r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8);
+    return v.toString(16);
+  });
+}
+
+function getAgendamentos(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e){ return []; }
+}
+function saveAgendamentos(list){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+function renderTabela(){
+  const list = getAgendamentos().slice().sort((a,b)=> new Date(b.criado_em) - new Date(a.criado_em));
+  const tbody = document.getElementById('tabela-agendamentos');
+  const empty = document.getElementById('empty-state');
+  tbody.innerHTML = '';
+  if(list.length === 0){
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.forEach(a=>{
+    const tr = document.createElement('tr');
+    const statusClass = a.status === 'Confirmado' ? 'status-confirmado' : 'status-pendente';
+    tr.innerHTML = `
+      <td>#${a.id.slice(0,8)}</td>
+      <td>${formatDate(a.data_desejada)}</td>
+      <td>${a.horario_preferencial}</td>
+      <td>${a.tipo_agendamento}</td>
+      <td><span class="status-pill ${statusClass}">${a.status}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function formatDate(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+/* ---------- Rascunho: recupera estado se a página recarregar ---------- */
+function saveDraft(){
+  const draft = {
+    nome_completo: val('nome_completo'),
+    email: val('email'),
+    telefone: val('telefone'),
+    numero_cac_rg: val('numero_cac_rg'),
+    tipo_agendamento: val('tipo_agendamento'),
+    data_desejada: val('data_desejada'),
+    horario_preferencial: val('horario_preferencial'),
+    observacoes: val('observacoes'),
+  };
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+}
+function restoreDraft(){
+  try{
+    const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
+    if(!draft) return;
+    Object.keys(draft).forEach(k=>{
+      const el = document.getElementById(k);
+      if(el) el.value = draft[k] || '';
+    });
+  }catch(e){}
+}
+function clearDraft(){ localStorage.removeItem(DRAFT_KEY); }
+
+function val(id){ return document.getElementById(id).value.trim(); }
+
+/* ---------- Validação ---------- */
+function setError(fieldId, isError){
+  const field = document.getElementById(fieldId);
+  field.classList.toggle('error', isError);
+}
+
+function validarFormulario(){
+  let valido = true;
+
+  const nome = val('nome_completo');
+  if(nome.length < 3){ setError('field-nome', true); valido = false; } else setError('field-nome', false);
+
+  const email = val('email');
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if(!emailOk){ setError('field-email', true); valido = false; } else setError('field-email', false);
+
+  const telefone = val('telefone');
+  if(telefone.length < 8){ setError('field-telefone', true); valido = false; } else setError('field-telefone', false);
+
+  const cac = val('numero_cac_rg');
+  const cacOk = /^[0-9]{7,9}(-?[0-9xX])?$/.test(cac.replace(/[.\s]/g,''));
+  if(!cacOk){ setError('field-cac', true); valido = false; } else setError('field-cac', false);
+
+  const tipo = val('tipo_agendamento');
+  if(!tipo){ setError('field-tipo', true); valido = false; } else setError('field-tipo', false);
+
+  const data = val('data_desejada');
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const dataValida = data && new Date(data+'T00:00:00') >= hoje;
+  if(!dataValida){ setError('field-data', true); valido = false; } else setError('field-data', false);
+
+  const horario = val('horario_preferencial');
+  if(!horario){ setError('field-horario', true); valido = false; } else setError('field-horario', false);
+
+  return valido;
+}
+
+/* ---------- Toast ---------- */
+function showToast(msg){
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(()=> toast.classList.remove('show'), 3800);
+}
+
+/* ---------- Envio (assíncrono, com bloqueio de duplo clique) ---------- */
+const form = document.getElementById('agendar-form');
+const submitBtn = document.getElementById('submit-btn');
+
+form.addEventListener('input', saveDraft);
+
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  if(!validarFormulario()) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Enviando...';
+
+  const registro = {
+    id: uuid(),
+    nome_completo: val('nome_completo'),
+    email: val('email'),
+    telefone: val('telefone'),
+    numero_cac_rg: val('numero_cac_rg'),
+    tipo_agendamento: val('tipo_agendamento'),
+    data_desejada: val('data_desejada'),
+    horario_preferencial: val('horario_preferencial'),
+    observacoes: val('observacoes'),
+    status: 'Pendente',
+    criado_em: new Date().toISOString(),
+  };
+
+  // Simula gravação assíncrona (troque por chamada real ao Supabase quando integrado)
+  setTimeout(()=>{
+    const list = getAgendamentos();
+    list.push(registro);
+    saveAgendamentos(list);
+    renderTabela();
+    clearDraft();
+    form.reset();
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Agendar Horário';
+    showToast('Agendamento enviado e salvo com sucesso no sistema!');
+  }, 600);
+});
+
+/* ---------- Init ---------- */
+document.addEventListener('DOMContentLoaded', ()=>{
+  restoreDraft();
+  renderTabela();
+  const dataInput = document.getElementById('data_desejada');
+  const hoje = new Date().toISOString().split('T')[0];
+  dataInput.setAttribute('min', hoje);
+});
+</script>
+
+</body>
+</html>
