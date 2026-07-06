@@ -325,8 +325,8 @@
 
         <div class="field" id="field-telefone">
           <label>Telefone/WhatsApp <span class="req">*</span></label>
-          <input type="text" id="telefone" placeholder="(99) 99999-9999">
-          <p class="error-msg">Informe um telefone válido.</p>
+          <input type="text" id="telefone" placeholder="(99) 99999-9999" maxlength="15">
+          <p class="error-msg">Formato inválido. Use (99) 99999-9999 ou (99) 9999-9999.</p>
         </div>
 
         <div class="field" id="field-cac">
@@ -544,6 +544,21 @@ function formatDate(iso){
   return `${d}/${m}/${y}`;
 }
 
+/* ---------- Máscara de telefone em tempo real ---------- */
+const telefoneInput = document.getElementById('telefone');
+telefoneInput.addEventListener('input', function(){
+  let d = this.value.replace(/\D/g, '').slice(0, 11);
+  if(d.length > 10){
+    this.value = d.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+  } else if(d.length > 5){
+    this.value = d.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+  } else if(d.length > 2){
+    this.value = d.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+  } else if(d.length > 0){
+    this.value = '(' + d;
+  }
+});
+
 /* ---------- Rascunho: recupera estado se a página recarregar ---------- */
 function saveDraft(){
   const draft = {
@@ -580,31 +595,47 @@ function setError(fieldId, isError){
 
 function validarFormulario(){
   let valido = true;
+  let primeiroErroId = null;
+  const marcarErro = (fieldId, condicaoInvalida)=>{
+    setError(fieldId, condicaoInvalida);
+    if(condicaoInvalida){
+      valido = false;
+      if(!primeiroErroId) primeiroErroId = fieldId;
+    }
+  };
 
   const nome = val('nome_completo');
-  if(nome.length < 3){ setError('field-nome', true); valido = false; } else setError('field-nome', false);
+  marcarErro('field-nome', nome.length < 3);
 
   const email = val('email');
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  if(!emailOk){ setError('field-email', true); valido = false; } else setError('field-email', false);
+  marcarErro('field-email', !emailOk);
 
   const telefone = val('telefone');
-  if(telefone.length < 8){ setError('field-telefone', true); valido = false; } else setError('field-telefone', false);
+  const telefoneOk = /^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(telefone);
+  marcarErro('field-telefone', !telefoneOk);
 
   const cac = val('numero_cac_rg');
   const cacOk = /^[0-9]{7,9}(-?[0-9xX])?$/.test(cac.replace(/[.\s]/g,''));
-  if(!cacOk){ setError('field-cac', true); valido = false; } else setError('field-cac', false);
+  marcarErro('field-cac', !cacOk);
 
   const tipo = val('tipo_agendamento');
-  if(!tipo){ setError('field-tipo', true); valido = false; } else setError('field-tipo', false);
+  marcarErro('field-tipo', !tipo);
 
   const data = val('data_desejada');
   const hoje = new Date(); hoje.setHours(0,0,0,0);
   const dataValida = data && new Date(data+'T00:00:00') >= hoje;
-  if(!dataValida){ setError('field-data', true); valido = false; } else setError('field-data', false);
+  marcarErro('field-data', !dataValida);
 
   const horario = val('horario_preferencial');
-  if(!horario){ setError('field-horario', true); valido = false; } else setError('field-horario', false);
+  marcarErro('field-horario', !horario);
+
+  if(primeiroErroId){
+    const campo = document.getElementById(primeiroErroId);
+    campo.scrollIntoView({behavior:'smooth', block:'center'});
+    const input = campo.querySelector('input, select, textarea');
+    if(input) input.focus();
+  }
 
   return valido;
 }
