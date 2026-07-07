@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alvo Certo - Painel Administrativo</title>
+<style>
+  :root{
+    --bg-principal:#0b0f17;
+    --bg-cards:#111622;
+    --vermelho-alvo:#dc2626;
+    --vermelho-hover:#b91c1c;
+    --texto-claro:#ffffff;
+    --texto-mutado:#94a3b8;
+    --borda-input:#1f293d;
+    --verde-ok:#16a34a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg-principal); color:var(--texto-claro); font-family:'Segoe UI', Arial, sans-serif; min-height:100vh;}
+  .container{max-width:1100px; margin:0 auto; padding:0 24px;}
+
+  header{border-bottom:1px solid var(--borda-input); padding:18px 24px; display:flex; align-items:center; justify-content:space-between;}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:800; font-size:1.1rem;}
+  .brand .logo-circle{width:30px; height:30px; border-radius:50%; border:2px solid var(--vermelho-alvo); display:flex; align-items:center; justify-content:center; position:relative;}
+  .brand .logo-circle::after{content:""; width:9px; height:9px; border-radius:50%; background:var(--vermelho-alvo);}
+  .admin-tag{color:var(--texto-mutado); font-size:.85rem;}
+
+  .btn{padding:10px 18px; border-radius:6px; font-weight:700; font-size:.88rem; cursor:pointer; border:none; transition:background .2s;}
+  .btn-primary{background:var(--vermelho-alvo); color:#fff;}
+  .btn-primary:hover{background:var(--vermelho-hover);}
+  .btn-outline{background:transparent; color:#fff; border:1px solid var(--borda-input);}
+  .btn:disabled{opacity:.6; cursor:not-allowed;}
+
+  /* LOGIN */
+  #login-screen{display:flex; align-items:center; justify-content:center; min-height:80vh; padding:24px;}
+  .login-card{background:var(--bg-cards); border:1px solid var(--borda-input); border-radius:12px; padding:40px; max-width:380px; width:100%;}
+  .login-card h2{margin-bottom:6px;}
+  .login-card p{color:var(--texto-mutado); font-size:.88rem; margin-bottom:24px;}
+  .field{margin-bottom:18px;}
+  .field label{display:block; font-size:.88rem; margin-bottom:6px; font-weight:600;}
+  .field input{width:100%; background:var(--bg-principal); border:1px solid var(--borda-input); border-radius:6px; padding:12px 14px; color:#fff; font-size:.92rem;}
+  .field input:focus{outline:none; border-color:var(--vermelho-alvo);}
+  #login-error{display:none; color:#f87171; font-size:.85rem; margin-bottom:14px; background:rgba(220,38,38,0.08); border:1px solid rgba(220,38,38,0.3); border-radius:6px; padding:10px 12px;}
+  #login-form .btn-primary{width:100%; padding:13px;}
+
+  /* DASHBOARD */
+  #dashboard{display:none;}
+  .stats-row{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:28px 0;}
+  .stat{background:var(--bg-cards); border:1px solid var(--borda-input); border-radius:10px; padding:20px;}
+  .stat span{display:block; color:var(--texto-mutado); font-size:.82rem; margin-bottom:6px;}
+  .stat b{font-size:1.6rem;}
+
+  .toolbar{display:flex; gap:12px; align-items:center; margin-bottom:18px; flex-wrap:wrap;}
+  .toolbar select, .toolbar input{background:var(--bg-cards); border:1px solid var(--borda-input); color:#fff; padding:9px 12px; border-radius:6px; font-size:.85rem;}
+
+  .table-wrap{overflow-x:auto; border:1px solid var(--borda-input); border-radius:10px; margin-bottom:40px;}
+  table{width:100%; border-collapse:collapse; font-size:.85rem;}
+  thead th{text-align:left; padding:14px 16px; background:var(--bg-cards); color:var(--texto-mutado); font-weight:600; border-bottom:1px solid var(--borda-input); white-space:nowrap;}
+  tbody td{padding:12px 16px; border-bottom:1px solid var(--borda-input); vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--bg-cards);}
+  tbody tr:nth-child(odd){background:var(--bg-principal);}
+  .status-select{background:var(--bg-principal); border:1px solid var(--borda-input); color:#fff; padding:6px 10px; border-radius:20px; font-size:.78rem; font-weight:700; cursor:pointer;}
+  .status-select.pendente{color:#f87171; border-color:rgba(220,38,38,0.4);}
+  .status-select.confirmado{color:#4ade80; border-color:rgba(22,163,74,0.4);}
+  .muted{color:var(--texto-mutado); font-size:.82rem;}
+  .empty-state{padding:48px; text-align:center; color:var(--texto-mutado);}
+  .obs-cell{max-width:180px; white-space:normal;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="logo-circle"></span> ALVO CERTO <span class="admin-tag">— Painel Admin</span></div>
+  <button class="btn btn-outline" id="logout-btn" style="display:none;">Sair</button>
+</header>
+
+<div id="login-screen">
+  <div class="login-card">
+    <h2>Acesso Administrativo</h2>
+    <p>Entre com as credenciais cadastradas no Supabase para ver os agendamentos.</p>
+    <div id="login-error">E-mail ou senha inválidos.</div>
+    <form id="login-form">
+      <div class="field">
+        <label>E-mail</label>
+        <input type="email" id="login-email" required>
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input type="password" id="login-senha" required>
+      </div>
+      <button type="submit" class="btn btn-primary" id="login-btn">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<div id="dashboard">
+  <div class="container">
+    <div class="stats-row">
+      <div class="stat"><span>Total de agendamentos</span><b id="stat-total">0</b></div>
+      <div class="stat"><span>Pendentes</span><b id="stat-pendentes" style="color:#f87171;">0</b></div>
+      <div class="stat"><span>Confirmados</span><b id="stat-confirmados" style="color:#4ade80;">0</b></div>
+    </div>
+
+    <div class="toolbar">
+      <select id="filtro-status">
+        <option value="">Todos os status</option>
+        <option value="Pendente">Pendente</option>
+        <option value="Confirmado">Confirmado</option>
+      </select>
+      <input type="text" id="filtro-busca" placeholder="Buscar por nome, e-mail ou CAC/RG...">
+      <button class="btn btn-outline" id="refresh-btn">Atualizar</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Protocolo</th><th>Nome</th><th>Contato</th><th>CAC/RG</th>
+            <th>Serviço</th><th>Data</th><th>Horário</th><th>Observações</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-body"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state" style="display:none;">Nenhum agendamento encontrado.</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* Use os mesmos valores configurados em index.html */
+const SUPABASE_URL = 'COLE_AQUI_SUA_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'COLE_AQUI_SUA_ANON_KEY';
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const loginScreen = document.getElementById('login-screen');
+const dashboard = document.getElementById('dashboard');
+const logoutBtn = document.getElementById('logout-btn');
+let todosAgendamentos = [];
+
+/* ---------- Login ---------- */
+document.getElementById('login-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const loginBtn = document.getElementById('login-btn');
+  const errorBox = document.getElementById('login-error');
+  errorBox.style.display = 'none';
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Entrando...';
+
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+
+  loginBtn.disabled = false;
+  loginBtn.textContent = 'Entrar';
+
+  if(error){
+    errorBox.style.display = 'block';
+    return;
+  }
+  mostrarDashboard();
+});
+
+logoutBtn.addEventListener('click', async ()=>{
+  await supabaseClient.auth.signOut();
+  location.reload();
+});
+
+/* ---------- Dashboard ---------- */
+async function mostrarDashboard(){
+  loginScreen.style.display = 'none';
+  dashboard.style.display = 'block';
+  logoutBtn.style.display = 'inline-block';
+  await carregarAgendamentos();
+}
+
+async function carregarAgendamentos(){
+  const { data, error } = await supabaseClient
+    .from('agendamentos')
+    .select('*')
+    .order('criado_em', { ascending: false });
+
+  if(error){
+    console.error(error);
+    return;
+  }
+  todosAgendamentos = data || [];
+  renderTabela();
+}
+
+function formatDate(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function renderTabela(){
+  const filtroStatus = document.getElementById('filtro-status').value;
+  const busca = document.getElementById('filtro-busca').value.trim().toLowerCase();
+
+  let lista = todosAgendamentos.filter(a=>{
+    if(filtroStatus && a.status !== filtroStatus) return false;
+    if(busca){
+      const alvo = `${a.nome_completo} ${a.email} ${a.numero_cac_rg}`.toLowerCase();
+      if(!alvo.includes(busca)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('stat-total').textContent = todosAgendamentos.length;
+  document.getElementById('stat-pendentes').textContent = todosAgendamentos.filter(a=>a.status==='Pendente').length;
+  document.getElementById('stat-confirmados').textContent = todosAgendamentos.filter(a=>a.status==='Confirmado').length;
+
+  const tbody = document.getElementById('tabela-body');
+  const empty = document.getElementById('empty-state');
+  tbody.innerHTML = '';
+
+  if(lista.length === 0){
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  lista.forEach(a=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>#${a.id.slice(0,8)}</td>
+      <td>${escapeHtml(a.nome_completo)}</td>
+      <td>${escapeHtml(a.email)}<br><span class="muted">${escapeHtml(a.telefone)}</span></td>
+      <td>${escapeHtml(a.numero_cac_rg)}</td>
+      <td>${escapeHtml(a.tipo_agendamento)}</td>
+      <td>${formatDate(a.data_desejada)}</td>
+      <td>${escapeHtml(a.horario_preferencial)}</td>
+      <td class="obs-cell muted">${escapeHtml(a.observacoes || '—')}</td>
+      <td>
+        <select class="status-select ${a.status==='Confirmado'?'confirmado':'pendente'}" data-id="${a.id}">
+          <option value="Pendente" ${a.status==='Pendente'?'selected':''}>Pendente</option>
+          <option value="Confirmado" ${a.status==='Confirmado'?'selected':''}>Confirmado</option>
+        </select>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.querySelectorAll('.status-select').forEach(sel=>{
+    sel.addEventListener('change', async (e)=>{
+      const id = e.target.dataset.id;
+      const novoStatus = e.target.value;
+      e.target.disabled = true;
+      const { error } = await supabaseClient
+        .from('agendamentos')
+        .update({ status: novoStatus })
+        .eq('id', id);
+      e.target.disabled = false;
+      if(error){
+        alert('Erro ao atualizar status.');
+        return;
+      }
+      e.target.className = 'status-select ' + (novoStatus === 'Confirmado' ? 'confirmado' : 'pendente');
+      const item = todosAgendamentos.find(a=>a.id===id);
+      if(item) item.status = novoStatus;
+      renderTabela();
+    });
+  });
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str ?? '';
+  return d.innerHTML;
+}
+
+document.getElementById('filtro-status').addEventListener('change', renderTabela);
+document.getElementById('filtro-busca').addEventListener('input', renderTabela);
+document.getElementById('refresh-btn').addEventListener('click', carregarAgendamentos);
+
+/* ---------- Verifica se já existe sessão ativa ---------- */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(session) mostrarDashboard();
+});
+</script>
+
+</body>
+</html>
