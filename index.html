@@ -680,7 +680,9 @@ form.addEventListener('submit', async function(e){
   submitBtn.disabled = true;
   submitBtn.textContent = 'Enviando...';
 
+  const novoId = crypto.randomUUID();
   const registro = {
+    id: novoId,
     nome_completo: val('nome_completo'),
     email: val('email'),
     telefone: val('telefone'),
@@ -692,11 +694,9 @@ form.addEventListener('submit', async function(e){
     status: 'Pendente',
   };
 
-  const { data, error } = await supabaseClient
+  const { error } = await supabaseClient
     .from('agendamentos')
-    .insert(registro)
-    .select()
-    .single();
+    .insert(registro);
 
   submitBtn.disabled = false;
   submitBtn.textContent = 'Agendar Horário';
@@ -709,7 +709,7 @@ form.addEventListener('submit', async function(e){
 
   clearDraft();
   form.reset();
-  addMeuId(data.id);
+  addMeuId(novoId);
   await carregarMeusAgendamentos();
   showToast('Agendamento enviado e salvo com sucesso no sistema!');
 });
