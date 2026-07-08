@@ -152,6 +152,7 @@
   .status-pill{padding:4px 10px; border-radius:20px; font-size:.75rem; font-weight:700;}
   .status-pendente{background:rgba(220,38,38,0.15); color:#f87171;}
   .status-confirmado{background:rgba(22,163,74,0.15); color:#4ade80;}
+  .status-cancelado{background:rgba(148,163,184,0.15); color:#94a3b8;}
   .empty-state{padding:40px; text-align:center; color:var(--texto-mutado); font-size:.9rem;}
 
   /* FOOTER */
@@ -356,7 +357,7 @@
           <div class="field" id="field-data">
             <label>Data Desejada <span class="req">*</span></label>
             <input type="date" id="data_desejada">
-            <p class="error-msg">Selecione uma data futura.</p>
+            <p class="error-msg">Selecione uma data futura de Segunda a Sexta (não atendemos aos fins de semana).</p>
           </div>
           <div class="field" id="field-horario">
             <label>Horário Preferencial <span class="req">*</span></label>
@@ -601,7 +602,10 @@ function validarFormulario(){
 
   const data = val('data_desejada');
   const hoje = new Date(); hoje.setHours(0,0,0,0);
-  const dataValida = data && new Date(data+'T00:00:00') >= hoje;
+  const dataFutura = data && new Date(data+'T00:00:00') >= hoje;
+  const diaSemana = data ? new Date(data+'T00:00:00').getDay() : null;
+  const diaUtil = diaSemana !== null && diaSemana !== 0 && diaSemana !== 6;
+  const dataValida = dataFutura && diaUtil;
   marcarErro('field-data', !dataValida);
 
   const horario = val('horario_preferencial');
@@ -655,7 +659,7 @@ async function carregarMeusAgendamentos(){
   }
   vazio.style.display = 'none';
   tbody.innerHTML = lista.map(a=>{
-    const statusClass = a.status === 'Confirmado' ? 'status-confirmado' : 'status-pendente';
+    const statusClass = a.status === 'Confirmado' ? 'status-confirmado' : (a.status === 'Cancelado' ? 'status-cancelado' : 'status-pendente');
     return `
       <tr>
         <td>#${a.id.slice(0,8)}</td>
@@ -673,12 +677,23 @@ const submitBtn = document.getElementById('submit-btn');
 
 form.addEventListener('input', saveDraft);
 
+/* Restaura a mensagem padrão do CAC/RG (evita ficar travada com o texto de conflito) */
+const MSG_PADRAO_CAC = 'Por favor, insira um número de CAC ou RG válido.';
+['numero_cac_rg', 'data_desejada', 'horario_preferencial'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>{
+    document.querySelector('#field-cac .error-msg').textContent = MSG_PADRAO_CAC;
+  });
+  document.getElementById(id).addEventListener('change', ()=>{
+    document.querySelector('#field-cac .error-msg').textContent = MSG_PADRAO_CAC;
+  });
+});
+
 form.addEventListener('submit', async function(e){
   e.preventDefault();
   if(!validarFormulario()) return;
 
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Enviando...';
+  submitBtn.textContent = 'Verificando disponibilidade...';
 
   const novoId = crypto.randomUUID();
   const registro = {
@@ -693,6 +708,37 @@ form.addEventListener('submit', async function(e){
     observacoes: val('observacoes') || null,
     status: 'Pendente',
   };
+
+  // CH-01: verifica se já existe agendamento com o mesmo CAC/RG + data + horário
+  const { data: conflito, error: erroConflito } = await supabaseClient.rpc(
+    'verificar_conflito_agendamento',
+    {
+      p_numero_cac_rg: registro.numero_cac_rg,
+      p_data_desejada: registro.data_desejada,
+      p_horario_preferencial: registro.horario_preferencial,
+    }
+  );
+
+  if(erroConflito){
+    console.error(erroConflito);
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Agendar Horário';
+    showToast('Não foi possível verificar disponibilidade agora. Tente novamente.', true);
+    return;
+  }
+
+  if(conflito){
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Agendar Horário';
+    setError('field-cac', true);
+    document.querySelector('#field-cac .error-msg').textContent =
+      'Já existe um agendamento para este CAC/RG nesta data e horário. Escolha outro horário.';
+    document.getElementById('field-cac').scrollIntoView({behavior:'smooth', block:'center'});
+    showToast('Conflito de agendamento: este CAC/RG já tem um horário marcado nesta data.', true);
+    return;
+  }
+
+  submitBtn.textContent = 'Enviando...';
 
   const { error } = await supabaseClient
     .from('agendamentos')
