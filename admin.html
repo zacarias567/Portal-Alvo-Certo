@@ -118,8 +118,8 @@
       <table>
         <thead>
           <tr>
-            <th>Protocolo</th><th>Nome</th><th>Contato</th><th>CAC/RG</th>
-            <th>Serviço</th><th>Data</th><th>Horário</th><th>Observações</th><th>Status</th>
+            <th>Protocolo</th><th>Nome</th><th>Contato</th><th>CAC/RG</th><th>Órgão/UF</th>
+            <th>Serviço</th><th>Data</th><th>Horário</th><th>Observações</th><th>Prioridade</th><th>Status</th>
           </tr>
         </thead>
         <tbody id="tabela-body"></tbody>
@@ -212,6 +212,9 @@ function renderTabela(){
     return true;
   });
 
+  // Atendimentos prioritários aparecem primeiro (CH-02)
+  lista = lista.slice().sort((a,b)=> (b.atendimento_prioritario === true) - (a.atendimento_prioritario === true));
+
   document.getElementById('stat-total').textContent = todosAgendamentos.length;
   document.getElementById('stat-pendentes').textContent = todosAgendamentos.filter(a=>a.status==='Pendente').length;
   document.getElementById('stat-confirmados').textContent = todosAgendamentos.filter(a=>a.status==='Confirmado').length;
@@ -229,15 +232,18 @@ function renderTabela(){
 
   lista.forEach(a=>{
     const tr = document.createElement('tr');
+    if(a.atendimento_prioritario){ tr.style.background = 'rgba(220,38,38,0.06)'; }
     tr.innerHTML = `
       <td>#${a.id.slice(0,8)}</td>
       <td>${escapeHtml(a.nome_completo)}</td>
       <td>${escapeHtml(a.email)}<br><span class="muted">${escapeHtml(a.telefone)}</span></td>
       <td>${escapeHtml(a.numero_cac_rg)}</td>
+      <td>${escapeHtml(a.orgao_expedidor_uf || '—')}</td>
       <td>${escapeHtml(a.tipo_agendamento)}</td>
       <td>${formatDate(a.data_desejada)}</td>
       <td>${escapeHtml(a.horario_preferencial)}</td>
       <td class="obs-cell muted">${escapeHtml(a.observacoes || '—')}</td>
+      <td>${a.atendimento_prioritario ? '<span class="status-pill" style="background:rgba(220,38,38,0.15); color:#f87171;">Prioritário</span>' : '<span class="muted">—</span>'}</td>
       <td>
         <select class="status-select ${a.status==='Confirmado'?'confirmado':(a.status==='Cancelado'?'cancelado':'pendente')}" data-id="${a.id}">
           <option value="Pendente" ${a.status==='Pendente'?'selected':''}>Pendente</option>
