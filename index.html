@@ -266,7 +266,7 @@
       </div>
     </div>
     <div class="legal-notice">
-      <b>⚠ Aviso Legal:</b> A comercialização de armamentos é regulamentada pelo Exército Brasileiro. A venda é realizada exclusivamente mediante apresentação de documentação CAC e análise do cadastro.
+      <b>⚠ Aviso Legal:</b> A comercialização de armamentos é regulamentada pelo Exército Brasileiro e sujeita ao Sistema de Gerenciamento Militar de Armas (SIGMA). A venda é realizada exclusivamente mediante apresentação de documentação CAC/RG com órgão expedidor válido e análise do cadastro.
     </div>
   </div>
 </section>
@@ -336,6 +336,13 @@
           <p class="error-msg">Por favor, insira um número de CAC ou RG válido.</p>
         </div>
 
+        <div class="field" id="field-orgao">
+          <label>🔒 Órgão Expedidor / UF <span class="req">*</span></label>
+          <input type="text" id="orgao_expedidor_uf" placeholder="Ex: SSP/SC">
+          <p class="error-msg">Informe o órgão expedidor e a UF do documento (ex: SSP/SC).</p>
+          <p class="hint">Órgão que emitiu o seu RG ou CAC, seguido da sigla do estado.</p>
+        </div>
+
         <div class="field" id="field-tipo">
           <label>Tipo de Agendamento <span class="req">*</span></label>
           <select id="tipo_agendamento">
@@ -372,6 +379,14 @@
             </select>
             <p class="error-msg">Selecione um horário.</p>
           </div>
+        </div>
+
+        <div class="field">
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600;">
+            <input type="checkbox" id="atendimento_prioritario" style="width:18px; height:18px; accent-color:var(--vermelho-alvo);">
+            Atendimento Prioritário
+          </label>
+          <p class="hint">Marque se você se enquadra na Lei do Idoso, é PCD, gestante, ou possui outra condição especial.</p>
         </div>
 
         <div class="field">
@@ -478,7 +493,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p class="legal">Aviso Legal: O Clube de Tiro e Loja de Armas Alvo Certo opera em conformidade com o Estatuto do Desarmamento (Lei 10.826/2003) e legislações complementares. Todas as transações são sujeitas à verificação documental.</p>
+      <p class="legal">Aviso Legal: O Clube de Tiro e Loja de Armas Alvo Certo opera em conformidade com o Estatuto do Desarmamento (Lei 10.826/2003), o Sistema de Gerenciamento Militar de Armas (SIGMA) e legislações complementares. Todas as transações são sujeitas à verificação documental.</p>
       <p>© 2026 Alvo Certo. Todos os direitos reservados. · <a href="admin.html" style="color:var(--texto-mutado); text-decoration:underline;">Acesso Administrativo</a></p>
     </div>
   </div>
@@ -544,10 +559,12 @@ function saveDraft(){
     email: val('email'),
     telefone: val('telefone'),
     numero_cac_rg: val('numero_cac_rg'),
+    orgao_expedidor_uf: val('orgao_expedidor_uf'),
     tipo_agendamento: val('tipo_agendamento'),
     data_desejada: val('data_desejada'),
     horario_preferencial: val('horario_preferencial'),
     observacoes: val('observacoes'),
+    atendimento_prioritario: document.getElementById('atendimento_prioritario').checked,
   };
   localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
 }
@@ -557,7 +574,9 @@ function restoreDraft(){
     if(!draft) return;
     Object.keys(draft).forEach(k=>{
       const el = document.getElementById(k);
-      if(el) el.value = draft[k] || '';
+      if(!el) return;
+      if(el.type === 'checkbox'){ el.checked = !!draft[k]; }
+      else{ el.value = draft[k] || ''; }
     });
   }catch(e){}
 }
@@ -596,6 +615,10 @@ function validarFormulario(){
   const cac = val('numero_cac_rg');
   const cacOk = /^[0-9]{7,9}(-?[0-9xX])?$/.test(cac.replace(/[.\s]/g,''));
   marcarErro('field-cac', !cacOk);
+
+  const orgaoExpedidor = val('orgao_expedidor_uf');
+  const orgaoOk = orgaoExpedidor.length >= 2;
+  marcarErro('field-orgao', !orgaoOk);
 
   const tipo = val('tipo_agendamento');
   marcarErro('field-tipo', !tipo);
@@ -660,13 +683,14 @@ async function carregarMeusAgendamentos(){
   vazio.style.display = 'none';
   tbody.innerHTML = lista.map(a=>{
     const statusClass = a.status === 'Confirmado' ? 'status-confirmado' : (a.status === 'Cancelado' ? 'status-cancelado' : 'status-pendente');
+    const seloPrioridade = a.atendimento_prioritario ? ' <span class="status-pill" style="background:rgba(220,38,38,0.15); color:#f87171;">Prioritário</span>' : '';
     return `
       <tr>
         <td>#${a.id.slice(0,8)}</td>
         <td>${formatDate(a.data_desejada)}</td>
         <td>${a.horario_preferencial}</td>
         <td>${a.tipo_agendamento}</td>
-        <td><span class="status-pill ${statusClass}">${a.status}</span></td>
+        <td><span class="status-pill ${statusClass}">${a.status}</span>${seloPrioridade}</td>
       </tr>`;
   }).join('');
 }
@@ -702,10 +726,12 @@ form.addEventListener('submit', async function(e){
     email: val('email'),
     telefone: val('telefone'),
     numero_cac_rg: val('numero_cac_rg'),
+    orgao_expedidor_uf: val('orgao_expedidor_uf'),
     tipo_agendamento: val('tipo_agendamento'),
     data_desejada: val('data_desejada'),
     horario_preferencial: val('horario_preferencial'),
     observacoes: val('observacoes') || null,
+    atendimento_prioritario: document.getElementById('atendimento_prioritario').checked,
     status: 'Pendente',
   };
 
