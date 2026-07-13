@@ -110,7 +110,9 @@
         <option value="Confirmado">Confirmado</option>
         <option value="Cancelado">Cancelado</option>
       </select>
-      <input type="text" id="filtro-busca" placeholder="Buscar por nome, e-mail ou CAC/RG...">
+      <input type="date" id="filtro-data" title="Filtrar por data desejada">
+      <input type="text" id="filtro-busca" placeholder="Buscar por nome, protocolo, telefone, e-mail ou CAC/RG...">
+      <button class="btn btn-outline" id="limpar-filtros-btn">Limpar filtros</button>
       <button class="btn btn-outline" id="refresh-btn">Atualizar</button>
     </div>
 
@@ -201,12 +203,14 @@ function formatDate(iso){
 
 function renderTabela(){
   const filtroStatus = document.getElementById('filtro-status').value;
+  const filtroData = document.getElementById('filtro-data').value;
   const busca = document.getElementById('filtro-busca').value.trim().toLowerCase();
 
   let lista = todosAgendamentos.filter(a=>{
     if(filtroStatus && a.status !== filtroStatus) return false;
+    if(filtroData && a.data_desejada !== filtroData) return false;
     if(busca){
-      const alvo = `${a.nome_completo} ${a.email} ${a.numero_cac_rg}`.toLowerCase();
+      const alvo = `${a.id} ${a.nome_completo} ${a.email} ${a.telefone} ${a.numero_cac_rg}`.toLowerCase();
       if(!alvo.includes(busca)) return false;
     }
     return true;
@@ -284,8 +288,15 @@ function escapeHtml(str){
 }
 
 document.getElementById('filtro-status').addEventListener('change', renderTabela);
+document.getElementById('filtro-data').addEventListener('change', renderTabela);
 document.getElementById('filtro-busca').addEventListener('input', renderTabela);
 document.getElementById('refresh-btn').addEventListener('click', carregarAgendamentos);
+document.getElementById('limpar-filtros-btn').addEventListener('click', ()=>{
+  document.getElementById('filtro-status').value = '';
+  document.getElementById('filtro-data').value = '';
+  document.getElementById('filtro-busca').value = '';
+  renderTabela();
+});
 
 /* ---------- Verifica se já existe sessão ativa ---------- */
 document.addEventListener('DOMContentLoaded', async ()=>{
