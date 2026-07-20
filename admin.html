@@ -114,6 +114,7 @@
       <input type="text" id="filtro-busca" placeholder="Buscar por nome, protocolo, telefone, e-mail ou CAC/RG...">
       <button class="btn btn-outline" id="limpar-filtros-btn">Limpar filtros</button>
       <button class="btn btn-outline" id="refresh-btn">Atualizar</button>
+      <button class="btn btn-primary" id="exportar-csv-btn">Exportar CSV (backup)</button>
     </div>
 
     <div class="table-wrap">
@@ -139,6 +140,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_Lm4TkDNMv5CUUAKKbS7RGA_V0xJLNBD';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+/* ---------- Referências de elementos e estado em memória ---------- */
 const loginScreen = document.getElementById('login-screen');
 const dashboard = document.getElementById('dashboard');
 const logoutBtn = document.getElementById('logout-btn');
@@ -195,6 +197,7 @@ async function carregarAgendamentos(){
   renderTabela();
 }
 
+/* ---------- Funções utilitárias (formatação/genéricas) ---------- */
 function formatDate(iso){
   if(!iso) return '';
   const [y,m,d] = iso.split('-');
@@ -259,10 +262,25 @@ function renderTabela(){
     tbody.appendChild(tr);
   });
 
+  /* CH-01: exige confirmação antes de alterar o status de um agendamento,
+     evitando alteração acidental (especialmente cancelamento). */
   document.querySelectorAll('.status-select').forEach(sel=>{
+    const statusAnterior = sel.value;
     sel.addEventListener('change', async (e)=>{
       const id = e.target.dataset.id;
       const novoStatus = e.target.value;
+      const item = todosAgendamentos.find(a=>a.id===id);
+      const nomeCliente = item ? item.nome_completo : 'este cliente';
+
+      const confirmado = confirm(
+        `Confirma alterar o status de "${nomeCliente}" para "${novoStatus}"?` +
+        (novoStatus === 'Cancelado' ? '\n\nAtenção: isso cancela o agendamento do cliente.' : '')
+      );
+      if(!confirmado){
+        e.target.value = statusAnterior;
+        return;
+      }
+
       e.target.disabled = true;
       const { error } = await supabaseClient
         .from('agendamentos')
@@ -271,10 +289,10 @@ function renderTabela(){
       e.target.disabled = false;
       if(error){
         alert('Erro ao atualizar status.');
+        e.target.value = statusAnterior;
         return;
       }
       e.target.className = 'status-select ' + (novoStatus === 'Confirmado' ? 'confirmado' : (novoStatus === 'Cancelado' ? 'cancelado' : 'pendente'));
-      const item = todosAgendamentos.find(a=>a.id===id);
       if(item) item.status = novoStatus;
       renderTabela();
     });
@@ -290,6 +308,34 @@ function escapeHtml(str){
 document.getElementById('filtro-status').addEventListener('change', renderTabela);
 document.getElementById('filtro-data').addEventListener('change', renderTabela);
 document.getElementById('filtro-busca').addEventListener('input', renderTabela);
+/* ---------- CH-02: exportação/backup manual dos dados ---------- */
+function exportarCSV(){
+  if(todosAgendamentos.length === 0){
+    alert('Não há agendamentos para exportar.');
+    return;
+  }
+  const colunas = ['id','nome_completo','email','telefone','numero_cac_rg','orgao_expedidor_uf','tipo_agendamento','data_desejada','horario_preferencial','atendimento_prioritario','status','observacoes','criado_em'];
+  const escapeCsv = (v)=>{
+    const s = (v === null || v === undefined) ? '' : String(v);
+    return '"' + s.replace(/"/g, '""') + '"';
+  };
+  const linhas = [colunas.join(',')];
+  todosAgendamentos.forEach(a=>{
+    linhas.push(colunas.map(c=>escapeCsv(a[c])).join(','));
+  });
+  const csv = '\uFEFF' + linhas.join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dataHoje = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `backup_agendamentos_alvo_certo_${dataHoje}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 document.getElementById('refresh-btn').addEventListener('click', carregarAgendamentos);
 document.getElementById('limpar-filtros-btn').addEventListener('click', ()=>{
   document.getElementById('filtro-status').value = '';
@@ -297,6 +343,7 @@ document.getElementById('limpar-filtros-btn').addEventListener('click', ()=>{
   document.getElementById('filtro-busca').value = '';
   renderTabela();
 });
+document.getElementById('exportar-csv-btn').addEventListener('click', exportarCSV);
 
 /* ---------- Verifica se já existe sessão ativa ---------- */
 document.addEventListener('DOMContentLoaded', async ()=>{
