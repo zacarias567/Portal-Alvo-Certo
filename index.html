@@ -516,6 +516,12 @@ const SUPABASE_ANON_KEY = 'sb_publishable_Lm4TkDNMv5CUUAKKbS7RGA_V0xJLNBD';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+/* =========================================================
+   IDENTIFICADORES LOCAIS (localStorage do navegador)
+   Usados apenas para "lembrar" o rascunho do formulário e
+   quais agendamentos pertencem a este visitante — não é
+   autenticação nem substitui o banco de dados.
+   ========================================================= */
 const DRAFT_KEY = 'alvo_certo_draft';
 const MEUS_IDS_KEY = 'alvo_certo_meus_ids';
 
@@ -531,6 +537,7 @@ function addMeuId(id){
   }
 }
 
+/* ---------- Funções utilitárias (formatação/genéricas) ---------- */
 function formatDate(iso){
   if(!iso) return '';
   const [y,m,d] = iso.split('-');
@@ -715,6 +722,10 @@ const MSG_PADRAO_CAC = 'Por favor, insira um número de CAC ou RG válido.';
 form.addEventListener('submit', async function(e){
   e.preventDefault();
   if(!validarFormulario()) return;
+
+  /* CH-01: confirma com o cliente antes de gravar o agendamento */
+  const resumo = `Confirma o agendamento de "${val('tipo_agendamento')}" para ${formatDate(val('data_desejada'))} às ${val('horario_preferencial')}?`;
+  if(!confirm(resumo)) return;
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Verificando disponibilidade...';
